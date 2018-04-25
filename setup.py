@@ -21,7 +21,7 @@ setup(
     install_requires=dependencies,
     entry_points={
         'console_scripts': [
-            'box_archive = box_archive.cli:main',
+            'boxarchive = box_archive.cli:main',
         ],
     },
     classifiers=[
