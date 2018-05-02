@@ -1,7 +1,9 @@
+BoxArchive==0.0.1
 boxsdk==1.5.5
 certifi==2018.4.16
 chardet==3.0.4
-enum34==1.1.6
+click==6.7
+click-log==0.2.1
 idna==2.6
 requests==2.18.4
 requests-toolbelt==0.8.0
