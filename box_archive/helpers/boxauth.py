@@ -6,13 +6,25 @@ REDIRECT_URL = 'http://localhost:8080/'
 PORT = 8080
 
 
+class BoxLoginError(RuntimeError):
+
+    def __init__(self, error_message):
+        super(BoxLoginError, self).__init__()
+        self.error_message = error_message
+        pass
+
+    def __str__(self):
+        return self.error_message
+
+
 def get_access_token_from_url(url):
     """
     Parse the access token from Box's response
     Args:
-        uri: the facebook graph api oauth URI containing valid client_id,
-             redirect_uri, client_secret, and auth_code arguments
+        uri: the box api oauth URI containing valid state
+             and code arguments
     Returns:
+        csrf_token
         a string containing the access key
     """
     token = str(urlopen(url).read(), 'utf-8')
@@ -37,6 +49,8 @@ class HTTPServerHandler(BaseHTTPRequestHandler):
             self.wfile.write(bytes('<html><h1>You may now close this window.'
                                    + '</h1></html>', 'utf-8'))
             self.server.access_token = self.auth_code
+        elif 'error_message' in self.path:
+            self.server.access_error = self.error_message
 
     # Disable logging from the HTTP Server
     def log_message(self, format, *args):
@@ -58,4 +72,7 @@ class TokenHandler:
             lambda request, address, server: HTTPServerHandler(
                 request, address, server, access_uri))
         http_server.handle_request()
-        return http_server.access_token
+        try:
+            return http_server.access_token
+        except AttributeError:
+            raise BoxLoginError(error_message=http_server.access_error)

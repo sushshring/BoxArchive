@@ -3,6 +3,7 @@ import logging
 import click_log
 
 from box_archive import __version__
+from box_archive.helpers import constants
 from box_archive.helpers.box_access import BoxAccess
 
 # Globals
@@ -31,7 +32,7 @@ def main(debug):
     else:
         logger.setLevel(logging.INFO)
         pass
-    click.echo("Welcome to the BoxArchive tool!")
+    click.secho(constants.welcome_text, fg='green')
     pass
 
 

@@ -1,4 +1,5 @@
 import boxsdk
+import click as click
 import requests
 import logging
 import webbrowser
@@ -6,7 +7,7 @@ import webbrowser
 import box_archive.helpers.constants as constants
 
 from box_archive.helpers.Singleton import Singleton
-from box_archive.helpers.boxauth import TokenHandler
+from box_archive.helpers.boxauth import TokenHandler, BoxLoginError
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +26,11 @@ class BoxAccess:
         auth_url, csrf_token = oauth.get_authorization_url("http://localhost:8080/")
 
         logger.info("Auth url: {0}, csrf_token: {1}", auth_url, csrf_token)
-        auth_code = TokenHandler().get_access_token(auth_url)
+        try:
+            auth_code = TokenHandler().get_access_token(auth_url)
+        except BoxLoginError as e:
+            click.secho("Authentication failed due to error: {0}".format(str(e)), fg='red', bold=True)
+            exit(1)
 
         logger.info("AUTH_CODE: {0}", auth_code)
         oauth.authenticate(auth_code)
