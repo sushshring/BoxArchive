@@ -1,6 +1,11 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.request import urlopen, HTTPError
+import urllib.parse as parse
 from webbrowser import open_new
+
+import logging
+
+logger = logging.getLogger('box_archive')
 
 REDIRECT_URL = 'http://localhost:8080/'
 PORT = 8080
@@ -17,18 +22,16 @@ class BoxLoginError(RuntimeError):
         return self.error_message
 
 
-def get_access_token_from_url(url):
+def get_access_token_from_url(path):
     """
     Parse the access token from Box's response
     Args:
-        uri: the box api oauth URI containing valid state
+        path: the box api oauth URI path containing valid state
              and code arguments
     Returns:
-        csrf_token
-        a string containing the access key
+        dict containing parsed url parameters
     """
-    token = str(urlopen(url).read(), 'utf-8')
-    return token.split('=')[1].split('&')[0]
+    return parse.parse_qs(path)
 
 
 class HTTPServerHandler(BaseHTTPRequestHandler):
@@ -44,13 +47,17 @@ class HTTPServerHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header('Content-type', 'text/html')
         self.end_headers()
-        if 'code' in self.path:
-            self.auth_code = self.path.split('=')[1]
+        result = get_access_token_from_url(self.path)
+        if 'code' in result:
+            self.auth_code = result['code'][0]
             self.wfile.write(bytes('<html><h1>You may now close this window.'
                                    + '</h1></html>', 'utf-8'))
             self.server.access_token = self.auth_code
-        elif 'error_message' in self.path:
-            self.server.access_error = self.error_message
+        elif 'error_description' in result:
+            logger.debug(result['error_description'][0])
+            self.wfile.write(bytes('<html><h1>You may now close this window.'
+                                   + '</h1></html>', 'utf-8'))
+            self.server.access_error = result['error_description'][0]
 
     # Disable logging from the HTTP Server
     def log_message(self, format, *args):

@@ -1,5 +1,6 @@
-import click
 import logging
+
+import click
 import click_log
 
 from box_archive import __version__
@@ -7,9 +8,11 @@ from box_archive.helpers import constants
 from box_archive.helpers.box_access import BoxAccess
 
 # Globals
+
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 logger = logging.getLogger(__name__)
 click_log.basic_config(logger)
+
 
 # Helper callbacks
 def print_version(ctx, param, value):
@@ -41,5 +44,12 @@ def init():
     """Logs in to Box, initializes CLI, and stores auth token"""
     logger.info("Logging in to Box now")
     boxAccess = BoxAccess.instance()
-    boxAccess.login_prompt()
+    if not boxAccess.logged_in:
+        boxAccess.login_prompt()
+
+    # Authenticated now
+    try:
+        click.secho("\n\n***** Logged in as: {0} *****".format(boxAccess.get_user()['login']), fg='green')
+    except RuntimeError as e:
+        print(e)
     pass
